@@ -1,3 +1,9 @@
+import praw
+reddit = praw.Reddit(client_id='08D24AM5aG_pj3_J4DFN1Q', # App ID
+                     client_secret='lu3C66Ps1r1lNRt1D0Lf9RTgCsxz4w', # App password
+                     user_agent='Text Miner 1.0', # App name (can be different)
+                     username='Separate_Objective78', # Username
+                     password='Awesome5') # User password
 
 import sqlite3
 import pandas as pd
@@ -5,13 +11,20 @@ import os
 import re
 import ast
 
-df = pd.read_csv('comments_table.csv', encoding = 'latin-1')
+# comments
+df1 = pd.read_csv('comments_table.csv', encoding = 'latin-1')
 
-conn = sqlite3.connect('comments.db')
-# df.to_sql('df', conn) # CREATED THE SQL DATABASE
+comments_conn = sqlite3.connect('comments.db')
+# df1.to_sql('comments_df', comments_conn) # CREATED THE SQL DATABASE
+
+# threads
+df2 = pd.read_csv('threads_table.csv', encoding = 'latin-1')
+
+threads_conn = sqlite3.connect('threads.db')
+# df2.to_sql('threads_df', threads_conn) # CREATED THE SQL DATABASE
 
 
-## CREATE THE TABLES THREADS AND COMMENTS ##
+# ## CREATE THE TABLES 'threads' AND 'comments' ##
 
 # conn = sqlite3.connect('Netflix.db')
 # cur = conn.cursor()
@@ -19,9 +32,9 @@ conn = sqlite3.connect('comments.db')
 
 # delete_sql1 = """DROP TABLE threads;"""
 # delete_sql2 = """DROP TABLE comments;"""
-# create_sql1 = """CREATE TABLE threads (ID text primary key, title text, body text, author text, url text, 
+# create_sql1 = """CREATE TABLE threads (ID text primary key, title text, author text, url text, 
 #                 created_utc real, num_comments integer, score integer);"""
-# create_sql2 = """CREATE TABLE comments (ID text primary key, parent_ID text, thread_ID text,
+# create_sql2 = """CREATE TABLE comments (ID text primary key, thread_ID text,
 #                 body text, author text, created_utc real, score integer,
 #                 foreign key (ID) references threads(ID));"""
 
@@ -31,69 +44,149 @@ conn = sqlite3.connect('comments.db')
 # cur.execute(create_sql2)
 
 
-# p = re.compile(r'netflix|nflx', re.IGNORECASE)
-
 # ## INSERT DATA RECORDS ##
+
+# # Technology Subreddit
+# thread_num = 0
 # subreddit1 = reddit.subreddit('technology')
-# # for thread in subreddit.search(query=p.findall(thread)):
 # for thread in subreddit1.search(query='netflix'):
-#     sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
-#     cur.execute(sql, (thread.id, thread.title, thread.selftext, thread.author.name, 
+#     sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?);"
+#     cur.execute(sql, (thread.id, thread.title, thread.author.name, 
 #                       thread.url, thread.created_utc, thread.num_comments, thread.score))
 #     thread.comments.replace_more(limit = 0)
+
+#     thread_num += 1
+#     if(thread_num % 10 == 0):
+#         print("{0} netflix thread files have been processed.".format(thread_num))
+
 #     comment_num = 0
 #     for comment in thread.comments:
 #         comment_num += 1
 #         if comment_num > 5:
 #             break
 #         if comment.author != None:
-#             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?, ?);"
-#             cur.execute(sql, (comment.id, comment.parent_id, comment.link_id, comment.body, 
+#             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
+#             cur.execute(sql, (comment.id, comment.link_id, comment.body, 
 #                             comment.author.name, comment.created_utc, comment.score))
 
+# thread_ids_lst = []
+# thread_ids = cur.execute("SELECT ID FROM threads")
+# for id in thread_ids.fetchall():
+#     thread_ids_lst.append(''.join(id))
+
+# thread_num = 0
+# for thread in subreddit1.search(query='nflx'):
+#     # NOTE: there are only 3 matches!
+#     if thread.id not in thread_ids_lst:
+#         sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?);"
+#         cur.execute(sql, (thread.id, thread.title, thread.author.name, 
+#                         thread.url, thread.created_utc, thread.num_comments, thread.score))
+#         thread.comments.replace_more(limit = 0)
+
+#         thread_num += 1
+#         if(thread_num % 10 == 0):
+#             print("{0} nflx thread files have been processed.".format(thread_num))
+
+#         comment_num = 0
+#         for comment in thread.comments:
+#             comment_num += 1
+#             if comment_num > 5:
+#                 break
+#             if comment.author != None:
+#                 sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
+#                 cur.execute(sql, (comment.id, comment.link_id, comment.body, 
+#                                 comment.author.name, comment.created_utc, comment.score))
+
+# # Stocks Subreddit
+# thread_num = 0
 # subreddit2 = reddit.subreddit('stocks')
 # for thread in subreddit2.search(query='netflix'):
-#     sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
-#     cur.execute(sql, (thread.id, thread.title, thread.selftext, thread.author.name, 
+#     sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?);"
+#     cur.execute(sql, (thread.id, thread.title, thread.author.name, 
 #                       thread.url, thread.created_utc, thread.num_comments, thread.score))
 #     thread.comments.replace_more(limit = 0)
+
+#     thread_num += 1
+#     if(thread_num % 10 == 0):
+#         print("{0} netflix thread files have been processed.".format(thread_num))
+
 #     comment_num = 0
 #     for comment in thread.comments:
 #         comment_num += 1
 #         if comment_num > 5:
 #             break
 #         if comment.author != None:
-#             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?, ?);"
-#             cur.execute(sql, (comment.id, comment.parent_id, comment.link_id, comment.body, 
+#             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
+#             cur.execute(sql, (comment.id, comment.link_id, comment.body, 
 #                             comment.author.name, comment.created_utc, comment.score))
+
+# thread_ids_lst = []
+# thread_ids = cur.execute("SELECT ID FROM threads")
+# for id in thread_ids.fetchall():
+#     thread_ids_lst.append(''.join(id))
+
+# thread_num = 0
+# for thread in subreddit2.search(query='nflx'):
+#     if thread.id not in thread_ids_lst:
+#         sql = "INSERT INTO threads VALUES (?, ?, ?, ?, ?, ?, ?);"
+#         cur.execute(sql, (thread.id, thread.title, thread.author.name, 
+#                         thread.url, thread.created_utc, thread.num_comments, thread.score))
+#         thread.comments.replace_more(limit = 0)
+
+#         thread_num += 1
+#         if(thread_num % 10 == 0):
+#             print("{0} nflx thread files have been processed.".format(thread_num))
+
+#         comment_num = 0
+#         for comment in thread.comments:
+#             comment_num += 1
+#             if comment_num > 5:
+#                 break
+#             if comment.author != None:
+#                 sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
+#                 cur.execute(sql, (comment.id, comment.link_id, comment.body, 
+#                                 comment.author.name, comment.created_utc, comment.score))
 
 # print("Done creating database!")
 
-## CREATE CSV ##
+# # CREATE CSV ##
 # query_threads_sql = "SELECT * FROM threads;"
 # threads_db = pd.read_sql(query_threads_sql, conn)
 # threads_db.to_csv('threads_table.csv', encoding='utf-8')
 
-# query_comments_sql = "SELECT * FROM df;"
+# query_comments_sql = "SELECT * FROM comments;"
 # comments_db = pd.read_sql(query_comments_sql, conn)
-# print(comments_db)
+# comments_db.to_csv('comments_table.csv', encoding='utf-8')
 
 
 ## ADD RESULTS TO LISTS ##
-cur = conn.cursor()
 
 review_list = []
 score_lst = []
 
-cur.execute("SELECT body FROM df;")
-for row in cur.fetchall():
+
+threads_cur = threads_conn.cursor()
+
+threads_cur.execute("SELECT title FROM threads_df;")
+for row in threads_cur.fetchall():
     review_list.append(''.join(row))
 
-cur.execute("SELECT score FROM df;")
-for row in cur.fetchall():
+threads_cur.execute("SELECT score FROM threads_df;")
+for row in threads_cur.fetchall():
     row = int(row[0])
     score_lst.append(row)
 
+
+comments_cur = comments_conn.cursor()
+
+comments_cur.execute("SELECT body FROM comments_df;")
+for row in comments_cur.fetchall():
+    review_list.append(''.join(row))
+
+comments_cur.execute("SELECT score FROM comments_df;")
+for row in comments_cur.fetchall():
+    row = int(row[0])
+    score_lst.append(row)
 
 
 # Expanding contraction
@@ -159,6 +252,8 @@ def rv_stopwords(tokenized_text):
 def preprocess(text):
     text = replace_contractions(text)
     text = text.lower()
+    #NOTE: we can add more preprocessing here towards a specific topic (advertisements, etc.)
+
     tokens = tokenize(text)
     tokens = rv_stopwords(tokens)
     return tokens
@@ -178,118 +273,212 @@ print("Finished model training!")
 
 
 
+# Prepare input and output for linear regression
+X = []
+Y = []
 
-## UNSUPERVISED LEARNING ##
+for t in model.wv.most_similar(positive=['grow'], topn = 300):
+    print(t)
+    # t is a tuple, t[0] is the word, t[1] is corresponding similarity
+    # We want word vector as input variables
+    # Word vectors can be obtained by model.wv[word]
+    
+    
+    # t --> ('amusing', 0.79138192)
+    # t[0] -> 'amusing'
+    # t[1] -> cosine similarity
+    
+    # X <- word vectors
+    # model.wv[t[0]]
+    
+    
+    
+    X.append(model.wv[t[0]])
+    Y.append(t[1])
 
-# Get the data
-
-from sklearn.datasets import make_blobs
-import matplotlib.pyplot as plt
-import seaborn as sns; sns.set()  # for plot styling
 import numpy as np
 
-X, y_true = make_blobs(n_samples=300, centers=4,
-                       cluster_std=0.60, random_state=0)
-plt.scatter(X[:, 0], X[:, 1], s=50);
 
-# K-means; k = 10
-from sklearn.cluster import KMeans
+# convert X and Y to numpy arrays
 
-kmeans = KMeans(n_clusters=10)
-kmeans.fit(X)
-y_kmeans = kmeans.predict(X)
-plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
-
-centers = kmeans.cluster_centers_
-plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+X = np.array(X)
+Y = np.array(Y)
 
 
-word_list = []
-wv_list = []
-
-for t in model.wv.most_similar(positive=['good'], topn = 50):
-    word_list.append(t[0])
-    wv_list.append(model.wv[t[0]])
-for t in model.wv.most_similar(positive=['up'], topn = 50):
-    word_list.append(t[0])
-    wv_list.append(model.wv[t[0]])
-for t in model.wv.most_similar(positive=['growth'], topn = 50):
-    word_list.append(t[0])
-    wv_list.append(model.wv[t[0]])
+print(Y.shape)
 
 
-wv_list = np.array(wv_list)
+# split dataset
+from sklearn.model_selection import train_test_split
 
-kmeans = KMeans(n_clusters=3)
-kmeans.fit(wv_list)
-y_kmeans = kmeans.predict(wv_list)
-print(y_kmeans)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.25)
+
+print(Y.shape)
+print(Y_train.shape)
+print(Y_test.shape)
+
+print(X_train.shape)
+print(X_test.shape)
 
 
-# viz
+from sklearn.linear_model import LinearRegression
 
-from sklearn.manifold import TSNE                   
-import random
 
-num_dimensions = 2
+#fit the model
+reg = LinearRegression().fit(X_train, Y_train)
+print(reg.coef_)
 
-# reduce using t-SNE
-tsne = TSNE(n_components=num_dimensions, random_state=0)
-vectors = tsne.fit_transform(wv_list)
 
-x_vals = [v[0] for v in vectors]
-y_vals = [v[1] for v in vectors]
+# Use the trained model to predict new values
+Y_pred = reg.predict(X_test)
 
-indices = list(range(len(word_list)))
-selected_indices = random.sample(indices, 30)
 
-plt.figure(figsize=(12, 12))
-for i in selected_indices:
-    plt.annotate(word_list[i], (x_vals[i], y_vals[i]))
+print(Y_pred)
+
+# Evaluate your model
+from sklearn import metrics
+
+print(metrics.mean_squared_error(Y_test, Y_pred))
+
+
+# What about another model:
+# Just the first 5 dimensions of the word vectors
+X = []
+Y = []
+
+for t in model.wv.most_similar(positive=['grow'], topn = 300):
+    X.append(model.wv[t[0]][:5])
+    Y.append(t[1])
+X = np.array(X)
+Y = np.array(Y)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.25)
+reg = LinearRegression().fit(X_train, Y_train)
+Y_pred = reg.predict(X_test)
+print(metrics.mean_squared_error(Y_test, Y_pred))
+
+
+# In[59]:
+
+
+# k-fold cross-validation
+from sklearn.model_selection import KFold
+
+
+# In[60]:
+
+
+kf = KFold(n_splits=10)
+for train_index, test_index in kf.split(X):
+    print("TRAIN:", train_index, "TEST:", test_index)
+    print("\n")
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
+
+
+# In[61]:
+
+
+# You can shuffle the dataset to make it even more randomized
+# random_state in some other functions also called random_seed
+# will generate the same randomized results -> When you want your results to be repeatable
+#
+kf = KFold(n_splits=10, shuffle=True, random_state=11)
+for train_index, test_index in kf.split(X):
+    print("TRAIN:", train_index, "TEST:", test_index)
+    print("\n")
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
+
+
+# In[62]:
+
+
+# Now you can train your model, calculate MSE, then average the score to evaluate the model
+
+X = []
+Y = []
+
+for t in model.wv.most_similar(positive=['grow'], topn = 300):
+    X.append(model.wv[t[0]][:5])
+    Y.append(t[1])
+X = np.array(X)
+Y = np.array(Y)
+
+
+MSE = []
+
+kf = KFold(n_splits=10, shuffle=True, random_state=11)
+for train_index, test_index in kf.split(X):
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
+    reg = LinearRegression().fit(X_train, Y_train)
+    Y_pred = reg.predict(X_test)
+    MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
+print(np.mean(MSE))
+
+
+# In[63]:
+
+
+X = []
+Y = []
+
+for t in model.wv.most_similar(positive=['grow'], topn = 300):
+    X.append(model.wv[t[0]])
+    Y.append(t[1])
+X = np.array(X)
+Y = np.array(Y)
+
+
+MSE = []
+
+kf = KFold(n_splits=10, shuffle=True, random_state=11)
+for train_index, test_index in kf.split(X):
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
+    reg = LinearRegression().fit(X_train, Y_train)
+    Y_pred = reg.predict(X_test)
+    MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
+print(np.mean(MSE))
+
+
+# In[32]:
+
+
+# You can even compare your choice of how many features you want
+# and then plot the results in a line chart
+
+import matplotlib.pyplot as plt
+
+line_chart_x = []
+line_chart_y = []
+
+
+for i in range(5, 300):
+    X = []
+    Y = []
+
+    for t in model.wv.most_similar(positive=['grow'], topn = 300):
+        X.append(model.wv[t[0]][:i])
+        Y.append(t[1])
+    X = np.array(X)
+    Y = np.array(Y)
+
+
+    MSE = []
+
+    kf = KFold(n_splits=10, shuffle=True, random_state=11)
+    for train_index, test_index in kf.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        Y_train, Y_test = Y[train_index], Y[test_index]
+        reg = LinearRegression().fit(X_train, Y_train)
+        Y_pred = reg.predict(X_test)
+        MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
     
-plt.scatter(x_vals, y_vals, c=y_kmeans, s=30, cmap='viridis')
+    line_chart_x.append(i)
+    line_chart_y.append(np.mean(MSE))
 
-
-# Association rule mining
-# We want to mine association between different movie actors/actress
-# We just want names from the text <- part-of-speech tagging: proper nouns: NNP
-
-import nltk
-# nltk.download('averaged_perceptron_tagger')
-# print(review_list[10])
-
-tokenizer = RegexpTokenizer(r'[\w\']+|\$[\d\.]+|\S+')
-# print(review_list[10])
-# tokenized_text = tokenizer.tokenize(review_list["reviewText"])
-# print(nltk.pos_tag(tokenized_text))
-
-
-def arm_preprocess(text):
-    text = replace_contractions(text)
-    text = text.lower()
-    tokens = RegexpTokenizer(r'[a-zA-Z]+').tokenize(text)
-    tokens = [t[0] for t in nltk.pos_tag(tokens) if t[1] == "NNP"]
-    return tokens
-
-
-arm_corpus = []
-
-for idx, text in enumerate(review_list):
-    if(idx % 1000 == 0):
-        print("{0} files have been preprocessed.".format(idx))
-    arm_corpus.append(arm_preprocess(text))
-
-print("Finished preprocessing!")
-
-
-print(arm_corpus)
-
-
-from apyori import apriori
-
-associations = apriori(arm_corpus, min_length = 2, max_length = 4, min_support = 0.0001, min_confidence = 0.1, min_lift = 2)
-print(list(associations))
-
+plt.plot(line_chart_x, line_chart_y)
 plt.show()
 
 
@@ -298,191 +487,16 @@ plt.show()
 
 
 
-
-# ## SUPERVISED LEARNING ##
-
-# # Prepare input and output for linear regression
-# X = []
-# Y = []
-
-# for t in model.wv.most_similar(positive=['good'], topn = 300):
-#     # t is a tuple, t[0] is the word, t[1] is corresponding similarity
-#     # We want word vector as input variables
-#     # Word vectors can be obtained by model.wv[word]
-    
-#     X.append(model.wv[t[0]])
-#     Y.append(t[1])
-
-# # split dataset
-# from sklearn.model_selection import train_test_split
-# import numpy as np
-
-
-# # convert X to numpy arrays
-# X = np.array(X)
-# Y = np.array(Y)
-# X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.25)
-
-# print(X)
-
-# print(X_train.shape)
-# print(X_test.shape)
-
-# from sklearn.linear_model import LinearRegression
-
-# #fit the model
-# reg = LinearRegression().fit(X_train, Y_train)
-# print(reg.coef_)
-
-# # Use the trained model to predict new values
-# Y_pred = reg.predict(X_test)
-
-
-# print(Y_pred)
-
-# # Evaluate your model
-# from sklearn import metrics
-
-# print(metrics.mean_squared_error(Y_test, Y_pred))
-
-# # What about another model:
-# # Just the first 5 dimensions of the word vectors
-# X = []
-# Y = []
-
-# for t in model.wv.most_similar(positive=['good'], topn = 100):
-#     X.append(model.wv[t[0]][:5])
-#     Y.append(t[1])
-# X = np.array(X)
-# X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.25)
-# reg = LinearRegression().fit(X_train, Y_train)
-# Y_pred = reg.predict(X_test)
-# print(metrics.mean_squared_error(Y_test, Y_pred))
-
-# # k-fold cross-validation
-# from sklearn.model_selection import KFold
-
-# kf = KFold(n_splits=10)
-# for train_index, test_index in kf.split(X):
-#     print("TRAIN:", train_index, "TEST:", test_index)
-#     print("\n")
-#     print(type(train_index), type(test_index))
-#     print(train_index)
-#     X_train, X_test = X[train_index], X[test_index]
-#     Y_train, Y_test = Y[train_index], Y[test_index]
-
-# # You can shuffle the dataset to make it even more randomized
-# # random_state in some other functions also called random_seed
-# # will generate the same randomized results -> When you want your results to be repeatable
-
-# kf = KFold(n_splits=10, shuffle=True, random_state=11)
-# for train_index, test_index in kf.split(X):
-#     print("TRAIN:", train_index, "TEST:", test_index)
-#     print("\n")
-#     X_train, X_test = X[train_index], X[test_index]
-#     Y_train, Y_test = Y[train_index], Y[test_index]
-
-
-
-# # Now you can train your model, calculate MSE, then average the score to evaluate the model
-
-# X = []
-# Y = []
-
-# for t in model.wv.most_similar(positive=['good'], topn = 100):
-#     X.append(model.wv[t[0]][:5])
-#     Y.append(t[1])
-# X = np.array(X)
-# Y = np.array(Y)
-
-
-# MSE = []
-
-# kf = KFold(n_splits=10, shuffle=True, random_state=11)
-# for train_index, test_index in kf.split(X):
-#     X_train, X_test = X[train_index], X[test_index]
-#     Y_train, Y_test = Y[train_index], Y[test_index]
-#     reg = LinearRegression().fit(X_train, Y_train)
-#     Y_pred = reg.predict(X_test)
-#     MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
-# print(np.mean(MSE))
-
-
-
-# X = []
-# Y = []
-
-# for t in model.wv.most_similar(positive=['good'], topn = 100):
-#     X.append(model.wv[t[0]])
-#     Y.append(t[1])
-# X = np.array(X)
-# Y = np.array(Y)
-
-
-# MSE = []
-
-# kf = KFold(n_splits=10, shuffle=True, random_state=11)
-# for train_index, test_index in kf.split(X):
-#     X_train, X_test = X[train_index], X[test_index]
-#     Y_train, Y_test = Y[train_index], Y[test_index]
-#     reg = LinearRegression().fit(X_train, Y_train)
-#     Y_pred = reg.predict(X_test)
-#     MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
-# print(np.mean(MSE))
-
-
-# # There might be overfitting problems
-# # So maybe just the first 5 features and you can get a much better model
-
-
-# # You can even compare your choice of how many features you want
-# # and then plot the results in a line chart
-
-# import matplotlib.pyplot as plt
-
-# line_chart_x = []
-# line_chart_y = []
-
-
-# for i in range(5, 100):
-#     X = []
-#     Y = []
-
-#     for t in model.wv.most_similar(positive=['good'], topn = 100):
-#         X.append(model.wv[t[0]][:i])
-#         Y.append(t[1])
-#     X = np.array(X)
-#     Y = np.array(Y)
-
-
-#     MSE = []
-
-#     kf = KFold(n_splits=10, shuffle=True, random_state=11)
-#     for train_index, test_index in kf.split(X):
-#         X_train, X_test = X[train_index], X[test_index]
-#         Y_train, Y_test = Y[train_index], Y[test_index]
-#         reg = LinearRegression().fit(X_train, Y_train)
-#         Y_pred = reg.predict(X_test)
-#         MSE.append(metrics.mean_squared_error(Y_test, Y_pred))
-    
-#     line_chart_x.append(i)
-#     line_chart_y.append(np.mean(MSE))
-
-# plt.plot(line_chart_x, line_chart_y)
-# plt.show()
-
-
 # # binary classification: logistic regression
-# # comparison between the Godfather and the Matrix 
-
+# # grow vs. stratocaster 
 
 # X = []
 # Y = []
 
-# for t in model.wv.most_similar(positive=['growth'], topn = 300):
+# for t in model.wv.most_similar(positive=['grow'], topn = 300):
 #     X.append(model.wv[t[0]])
 #     Y.append(1)
-# for t in model.wv.most_similar(positive=['drop'], topn = 300):
+# for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
 #     X.append(model.wv[t[0]])
 #     Y.append(0)
 
@@ -491,21 +505,22 @@ plt.show()
 
 # # This might be problematic, a word could be in the first list as well as the second list
 
+
+# # In[65]:
+
+
 # # build a dictionary to store the data first
 
-# word_vector = {}
+# grow_dict = {}
+# stratocaster_dict = {}
 
-# for t in model.wv.most_similar(positive=['growth'], topn = 300):
-#     word_vector[t[0]] = [model.wv[t[0]], 1]
-# for t in model.wv.most_similar(positive=['drop'], topn = 300):
-#     # if the word already exists in the dictionary
-#     if(t[0] in word_vector):
-#         # label it with another value
-#         word_vector[t[0]][1] = -1
-#     else:
-#         word_vector[t[0]] = [model.wv[t[0]], 0]
+# for t in model.wv.most_similar(positive=['grow'], topn = 300):
+#     grow_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
+#     stratocaster_dict[t[0]] = model.wv[t[0]]
 
-# print(word_vector)
+
+# # In[82]:
 
 
 # # Now add it to X and Y
@@ -513,27 +528,38 @@ plt.show()
 # X = []
 # Y = []
 
-
-# double_exist_count = 0
-
-# for key, value in word_vector.items():
-#     if(value[1] == 1):
-#         X.append(value[0])
-#         Y.append(1)
-#     elif(value[1] == 0):
-#         X.append(value[0])
+# for word in grow_dict.keys():
+#     if(word not in stratocaster_dict.keys()):
+#         X.append(grow_dict[word])
 #         Y.append(0)
-#     else:
-#         double_exist_count += 1
-#         continue
+        
+# for word in stratocaster_dict.keys():
+#     if(word not in grow_dict.keys()):
+#         X.append(stratocaster_dict[word])
+#         Y.append(1)
 
-# print(double_exist_count)
+
+# # In[83]:
+
+
+# print(len(X))
+# print(Y)
+
+
+# # In[84]:
 
 
 # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.25)
 
+
+# # In[73]:
+
+
 # # fit the model
 # from sklearn.linear_model import LogisticRegression
+
+
+# # In[85]:
 
 
 # clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
@@ -541,12 +567,22 @@ plt.show()
 # print(clf.predict(X_test))
 
 
-# from sklearn.metrics import confusion_matrix
+# # In[75]:
+
+
+# from sklearn.metrics import confusion_stratocaster
+
+
+# # In[86]:
+
 
 # # Get the value of true positive, false positive, false negative, and true negative
-# print(confusion_matrix(Y_test, clf.predict(X_test)))
-# tn, fp, fn, tp = confusion_matrix(Y_test, clf.predict(X_test)).ravel()
+# print(confusion_stratocaster(Y_test, clf.predict(X_test)))
+# tn, fp, fn, tp = confusion_stratocaster(Y_test, clf.predict(X_test)).ravel()
 # print(tn, fp, fn, tp)
+
+
+# # In[87]:
 
 
 # # calculate precision, recall, and f1
@@ -558,52 +594,62 @@ plt.show()
 # print("f1: ", f1)
 
 
+# # In[89]:
+
+
 # # Now use the trained model to predict new values
 
-# movies = ["batman", "transformers", "gump", "goodfellas", "casablanca", "shawshank"]
+# words = ["stratocaster", "telecaster", "drums", "gibson", "fender", "ibanez",
+#         "rich", "natural", "colorful", "lightweight", "unique"]
 
-# # label 1 -- the Godfather 
-# # label 0 -- the Matrix
+# # label 0 -- grow 
+# # label 1 -- the stratocaster
 
-# comparison = ["matrix", "godfather"]
+# comparison = ["grow", "stratocaster"]
 
-# for m in movies:
+# for m in words:
 #     prediction_result = clf.predict([model.wv[m]])[0]
 #     # print(prediction_result)
 #     print("{0:20}{1:20}{2:20}".format(m, "--------",comparison[prediction_result]))
 
 
+# # In[95]:
+
+
+# from sklearn.metrics import classification_report
+
+
+# # In[101]:
+
+
+
 # # 10-fold cross-validation
 
-# word_vector = {}
 
-# for t in model.wv.most_similar(positive=['godfather'], topn = 300):
-#     word_vector[t[0]] = [model.wv[t[0]], 1]
-# for t in model.wv.most_similar(positive=['matrix'], topn = 300):
-#     # if the word already exists in the dictionary
-#     if(t[0] in word_vector):
-#         # label it with another value
-#         word_vector[t[0]][1] = -1
-#     else:
-#         word_vector[t[0]] = [model.wv[t[0]], 0]
+# grow_dict = {}
+# stratocaster_dict = {}
+
+# for t in model.wv.most_similar(positive=["grow"], topn = 300):
+#     grow_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
+#     stratocaster_dict[t[0]] = model.wv[t[0]]
 
 # X = []
 # Y = []
 
-# for key, value in word_vector.items():
-#     if(value[1] == 1):
-#         X.append(value[0])
-#         Y.append(1)
-#     elif(value[1] == 0):
-#         X.append(value[0])
+# for word in grow_dict.keys():
+#     if(word not in stratocaster_dict.keys()):
+#         X.append(grow_dict[word])
 #         Y.append(0)
-#     else:
-#         double_exist_count += 1
-#         continue
+        
+# for word in stratocaster_dict.keys():
+#     if(word not in grow_dict.keys()):
+#         X.append(stratocaster_dict[word])
+#         Y.append(1)
 
 # X = np.array(X)
 # Y = np.array(Y)
-
+        
 # f1_list = []
 
 # kf = KFold(n_splits=10, shuffle=True, random_state=11)
@@ -611,40 +657,271 @@ plt.show()
 #     X_train, X_test = X[train_index], X[test_index]
 #     Y_train, Y_test = Y[train_index], Y[test_index]
 #     clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
-#     tn, fp, fn, tp = confusion_matrix(Y_test, clf.predict(X_test)).ravel()
+#     tn, fp, fn, tp = confusion_stratocaster(Y_test, clf.predict(X_test)).ravel()
     
 #     precision = tp/(tp+fp)
 #     recall = tp/(tp+fn)
 #     f1 = 2*precision*recall/(precision+recall)
     
+#     print(classification_report(Y_test, clf.predict(X_test)))
+    
 #     f1_list.append(f1)
 # print(np.mean(f1_list))
+
+
+# # In[140]:
+
+
+# from sklearn.metrics import precision_recall_fscore_support
+# from sklearn.metrics import accuracy_score
+
+
+# # In[143]:
+
+
+# # 3 class classification
+
+
+# grow_dict = {}
+# stratocaster_dict = {}
+# freeman_dict = {}
+
+# for t in model.wv.most_similar(positive=['grow'], topn = 300):
+#     grow_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
+#     stratocaster_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['freeman'], topn = 300):
+#     freeman_dict[t[0]] = model.wv[t[0]]
+
+# X = []
+# Y = []
+
+# for word in grow_dict.keys():
+#     if(word not in stratocaster_dict.keys() and word not in freeman_dict.keys()):
+#         X.append(grow_dict[word])
+#         Y.append(0)
+        
+# for word in stratocaster_dict.keys():
+#     if(word not in grow_dict.keys() and word not in freeman_dict.keys()):
+#         X.append(stratocaster_dict[word])
+#         Y.append(1)
+        
+# for word in freeman_dict.keys():
+#     if(word not in grow_dict.keys() and word not in stratocaster_dict.keys()):
+#         X.append(freeman_dict[word])
+#         Y.append(2)
+
+# X = np.array(X)
+# Y = np.array(Y)
+
+# print("The size of X:", len(X))
+        
+# accuracy_list = []
+
+# kf = KFold(n_splits=10, shuffle=True, random_state=11)
+# for train_index, test_index in kf.split(X):
+#     X_train, X_test = X[train_index], X[test_index]
+#     Y_train, Y_test = Y[train_index], Y[test_index]
+#     clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
+#     Y_pred = clf.predict(X_test)
+    
+#     print("confusion stratocaster")
+#     print(confusion_stratocaster(Y_test, clf.predict(X_test)))
+#     print("a specific element from the confusion stratocaster")
+#     print(confusion_stratocaster(Y_test, clf.predict(X_test))[0, 1])
+#     print("classification report")
+#     print(classification_report(Y_test, clf.predict(X_test)))
+#     print("per-label precision, recall, f1, support")
+#     print(precision_recall_fscore_support(Y_test, Y_pred))
+#     print("per-label precision")
+#     print(precision_recall_fscore_support(Y_test, Y_pred)[0])
+#     print("macro average")
+#     print(precision_recall_fscore_support(Y_test, Y_pred, average='macro'))
+#     print("weighted average")
+#     print(precision_recall_fscore_support(Y_test, Y_pred, average='weighted'))
+#     print("accuracy")
+#     print(accuracy_score(Y_test, Y_pred))
+    
+#     print("\n\n")
+    
+#     accuracy_list.append(accuracy_score(Y_test, Y_pred))
+
+# print("10-fold accuracy avg:", np.mean(accuracy_list))
+
+
+# # In[152]:
+
+
+# # 
+# words = ["batman", "transformers", "gump", "goodfellas", "casablanca", "shawshank",
+#         "happy", "sad", "impressive", "disgusting", "wonderful",
+#         "hanks", "pacino", "depp", "jolie", "watson"]
+
+# # label 0 -- grow 
+# # label 1 -- the stratocaster
+# # label 2 -- Freeman
+
+# comparison = ["grow", "stratocaster", "freeman"]
+
+# for m in words:
+#     prediction_result = clf.predict([model.wv[m]])[0]
+#     # print(prediction_result)
+#     print("{0:20}{1:20}{2:20}".format(m, "--------",comparison[prediction_result]))
+
+
+# # In[145]:
+
 
 # # Support vector machine
 
 # from sklearn import svm
 
+
+# # In[146]:
+
+
 # # Just change the function name
-# clf = svm.SVC().fit(X_train, Y_train)
-# tn, fp, fn, tp = confusion_matrix(Y_test, clf.predict(X_test)).ravel()
 
-# precision = tp/(tp+fp)
-# recall = tp/(tp+fn)
-# f1 = 2*precision*recall/(precision+recall)
-# print("precision: ", precision)
-# print("recall:", recall)
-# print("f1: ", f1)
+# grow_dict = {}
+# stratocaster_dict = {}
+# freeman_dict = {}
+
+# for t in model.wv.most_similar(positive=['grow'], topn = 300):
+#     grow_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
+#     stratocaster_dict[t[0]] = model.wv[t[0]]
+# for t in model.wv.most_similar(positive=['freeman'], topn = 300):
+#     freeman_dict[t[0]] = model.wv[t[0]]
+
+# X = []
+# Y = []
+
+# for word in grow_dict.keys():
+#     if(word not in stratocaster_dict.keys() and word not in freeman_dict.keys()):
+#         X.append(grow_dict[word])
+#         Y.append(0)
+        
+# for word in stratocaster_dict.keys():
+#     if(word not in grow_dict.keys() and word not in freeman_dict.keys()):
+#         X.append(stratocaster_dict[word])
+#         Y.append(1)
+        
+# for word in freeman_dict.keys():
+#     if(word not in grow_dict.keys() and word not in stratocaster_dict.keys()):
+#         X.append(freeman_dict[word])
+#         Y.append(2)
+
+# X = np.array(X)
+# Y = np.array(Y)
+
+# print("The size of X:", len(X))
+        
+# accuracy_list = []
+
+# kf = KFold(n_splits=10, shuffle=True, random_state=11)
+# for train_index, test_index in kf.split(X):
+#     X_train, X_test = X[train_index], X[test_index]
+#     Y_train, Y_test = Y[train_index], Y[test_index]
+#     clf = svm.SVC().fit(X_train, Y_train)
+#     Y_pred = clf.predict(X_test)
+    
+#     print("confusion stratocaster")
+#     print(confusion_stratocaster(Y_test, clf.predict(X_test)))
+#     print("a specific element from the confusion stratocaster")
+#     print(confusion_stratocaster(Y_test, clf.predict(X_test))[0, 1])
+#     print("classification report")
+#     print(classification_report(Y_test, clf.predict(X_test)))
+#     print("per-label precision, recall, f1, support")
+#     print(precision_recall_fscore_support(Y_test, Y_pred))
+#     print("per-label precision")
+#     print(precision_recall_fscore_support(Y_test, Y_pred)[0])
+#     print("macro average")
+#     print(precision_recall_fscore_support(Y_test, Y_pred, average='macro'))
+#     print("weighted average")
+#     print(precision_recall_fscore_support(Y_test, Y_pred, average='weighted'))
+#     print("accuracy")
+#     print(accuracy_score(Y_test, Y_pred))
+    
+#     print("\n\n")
+    
+#     accuracy_list.append(accuracy_score(Y_test, Y_pred))
+
+# print("10-fold accuracy avg:", np.mean(accuracy_list))
 
 
-# # kernerl tricks
+# # In[147]:
+
+
+# def svm_application(kernel):
+#     grow_dict = {}
+#     stratocaster_dict = {}
+#     freeman_dict = {}
+
+#     for t in model.wv.most_similar(positive=['grow'], topn = 300):
+#         grow_dict[t[0]] = model.wv[t[0]]
+#     for t in model.wv.most_similar(positive=['stratocaster'], topn = 300):
+#         stratocaster_dict[t[0]] = model.wv[t[0]]
+#     for t in model.wv.most_similar(positive=['freeman'], topn = 300):
+#         freeman_dict[t[0]] = model.wv[t[0]]
+
+#     X = []
+#     Y = []
+
+#     for word in grow_dict.keys():
+#         if(word not in stratocaster_dict.keys() and word not in freeman_dict.keys()):
+#             X.append(grow_dict[word])
+#             Y.append(0)
+
+#     for word in stratocaster_dict.keys():
+#         if(word not in grow_dict.keys() and word not in freeman_dict.keys()):
+#             X.append(stratocaster_dict[word])
+#             Y.append(1)
+
+#     for word in freeman_dict.keys():
+#         if(word not in grow_dict.keys() and word not in stratocaster_dict.keys()):
+#             X.append(freeman_dict[word])
+#             Y.append(2)
+
+#     X = np.array(X)
+#     Y = np.array(Y)
+
+#     print("The size of X:", len(X))
+
+#     accuracy_list = []
+
+#     kf = KFold(n_splits=10, shuffle=True, random_state=11)
+#     for train_index, test_index in kf.split(X):
+#         X_train, X_test = X[train_index], X[test_index]
+#         Y_train, Y_test = Y[train_index], Y[test_index]
+#         clf = svm.SVC(kernel=kernel).fit(X_train, Y_train)
+#         Y_pred = clf.predict(X_test)
+
+#         print("confusion stratocaster")
+#         print(confusion_stratocaster(Y_test, clf.predict(X_test)))
+#         print("a specific element from the confusion stratocaster")
+#         print(confusion_stratocaster(Y_test, clf.predict(X_test))[0, 1])
+#         print("classification report")
+#         print(classification_report(Y_test, clf.predict(X_test)))
+#         print("per-label precision, recall, f1, support")
+#         print(precision_recall_fscore_support(Y_test, Y_pred))
+#         print("per-label precision")
+#         print(precision_recall_fscore_support(Y_test, Y_pred)[0])
+#         print("macro average")
+#         print(precision_recall_fscore_support(Y_test, Y_pred, average='macro'))
+#         print("weighted average")
+#         print(precision_recall_fscore_support(Y_test, Y_pred, average='weighted'))
+#         print("accuracy")
+#         print(accuracy_score(Y_test, Y_pred))
+
+#         print("\n\n")
+
+#         accuracy_list.append(accuracy_score(Y_test, Y_pred))
+
+#     print("10-fold accuracy avg:", np.mean(accuracy_list))
+
+
+# # kernel tricks
 # for kernel in ('linear', 'poly', 'rbf'):
 #     print("current kernel: " + kernel)
-#     clf = svm.SVC(kernel=kernel, gamma=2).fit(X_train, Y_train)
-#     tn, fp, fn, tp = confusion_matrix(Y_test, clf.predict(X_test)).ravel()
-#     precision = tp/(tp+fp)
-#     recall = tp/(tp+fn)
-#     f1 = 2*precision*recall/(precision+recall)
-#     print("precision: ", precision)
-#     print("recall:", recall)
-#     print("f1: ", f1)
-#     print("\n")
+#     svm_application(kernel)
+

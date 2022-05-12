@@ -1,10 +1,3 @@
-import praw
-reddit = praw.Reddit(client_id='08D24AM5aG_pj3_J4DFN1Q', # App ID
-                     client_secret='lu3C66Ps1r1lNRt1D0Lf9RTgCsxz4w', # App password
-                     user_agent='Text Miner 1.0', # App name (can be different)
-                     username='Separate_Objective78', # Username
-                     password='Awesome5') # User password
-
 import sqlite3
 import pandas as pd
 import os

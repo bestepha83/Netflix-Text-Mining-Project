@@ -257,7 +257,7 @@ def preprocess(text):
 
 corpus = []
 
-# # Adding in a specific topic?? #
+# # Adding in a specific topic #
 # def topic(review_list):
 #     p1 = re.compile(r"^ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?$\
 #         |^advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?$", re.IGNORECASE)
@@ -412,22 +412,29 @@ sub_entries_nltk = {'negative': 0, 'positive' : 0, 'neutral' : 0}
 
 # when an entry is scored the same (positive, positive) by both textblob and vader, add that entry to the "true" sentiment list
 true_sent = {}
+true_sent_count = 0
+all_entries = 0
+
 for submission in lines:
     sent1 = text_blob_sentiment(submission, sub_entries_textblob)
     sent2 = nltk_sentiment(submission, sub_entries_nltk)
+    all_entries += 1
     if sent1 == sent2 and sent1 != "Neutral":
         true_sent[submission] = sent1
+        true_sent_count += 1
 
-
-print(sub_entries_textblob)
-print(sub_entries_nltk)
+print()
+print(f"Text Blob: {sub_entries_textblob}")
+print(f"Vader: {sub_entries_nltk}")
+print(f"Models identified {true_sent_count} true sentiments out of {all_entries}\n")
 
 # use the true sentiment list for the supervised learning model
-## HAVEN'T DONE YET -- split the true sentiment list randomly 20% to training model and 80% to the testing model
+# split the true sentiment list randomly 20% to training model and 80% to the testing model
 
 # convert sentiment dictionary to two lists
 corpus_raw = []
 labels = []
+ts_count = 0
 
 for key in true_sent:
     corpus_raw.append(key)
@@ -435,12 +442,11 @@ for key in true_sent:
         labels.append(1)
     else:
         labels.append(0)
+    ts_count += 1
+    if ts_count == round(len(true_sent)/4):
+        break
 
-
-
-documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(corpus_raw)]
-model = Doc2Vec(documents, vector_size=50, window=2, min_count=1, workers=4)
-
+print(len(corpus_raw))
 
 # supervised learning
 # X: document vectors
@@ -466,12 +472,20 @@ clf = svm.SVC().fit(X_train, Y_train)
 
 
 # Testing set
-test_corpus_raw = []
 test_labels = []
-
-# preprocessing test documents
 test_corpus = []
+test_corpus_raw = []
 
+for key in true_sent:
+    if key not in corpus_raw:
+        test_corpus_raw.append(key)
+        test_corpus.append(list(key))
+        if true_sent[key] == "Positive":
+            test_labels.append(1)
+        else:
+            test_labels.append(0)
+
+print(len(test_corpus))
 
 # test document vectors
 X_test = []
@@ -481,6 +495,7 @@ for i in range(len(test_corpus)):
 X_test = np.asarray(X_test)
 
 Y_test = np.asarray(test_labels)
+
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report

@@ -410,7 +410,8 @@ sub_entries_textblob = {'negative': 0, 'positive' : 0, 'neutral' : 0}
 sub_entries_nltk = {'negative': 0, 'positive' : 0, 'neutral' : 0}
 
 
-# when an entry is scored the same (positive, positive) by both textblob and vader, add that entry to the "true" sentiment list
+# when an entry is scored the same (positive, positive) by both textblob and vader, 
+# add that entry to the "true" sentiment list
 true_sent = {}
 true_sent_count = 0
 all_entries = 0
@@ -446,9 +447,9 @@ for key in true_sent:
     if ts_count == round(len(true_sent)/4):
         break
 
-print(len(corpus_raw))
+print(f"Training set length: {len(corpus_raw)}")
 
-# supervised learning
+## SUPERVISED LEARNING ##
 # X: document vectors
 # Y: labels
 
@@ -462,13 +463,13 @@ X_train = np.asarray(X_train)
 Y_train = np.asarray(labels)
 
 
-# logistic regression, SVM
+# Logistic Regression #
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 
 
-# clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
-clf = svm.SVC().fit(X_train, Y_train)
+clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
+# clf = svm.SVC().fit(X_train, Y_train)
 
 
 # Testing set
@@ -485,7 +486,7 @@ for key in true_sent:
         else:
             test_labels.append(0)
 
-print(len(test_corpus))
+print(f"Testing set length: {len(test_corpus)}\n")
 
 # test document vectors
 X_test = []
@@ -517,7 +518,7 @@ print("f1: ", f1)
 print(classification_report(Y_test, Y_pred))
 
 
-# What about the rule-based sentiment analyzers?
+# Rule-based sentiment analyzers?
 
 vader_Y = []
 
@@ -539,6 +540,8 @@ for doc in test_corpus_raw:
     else:
         blob_Y.append(0)
 print(classification_report(Y_test, blob_Y))
+
+
 
 
 

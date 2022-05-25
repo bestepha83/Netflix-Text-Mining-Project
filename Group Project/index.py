@@ -25,8 +25,8 @@ threads_conn = sqlite3.connect('threads.db')
 # cur = conn.cursor()
 
 
-# delete_sql1 = """low TABLE threads;"""
-# delete_sql2 = """low TABLE comments;"""
+# delete_sql1 = """DROP TABLE threads;"""
+# delete_sql2 = """DROP TABLE comments;"""
 # create_sql1 = """CREATE TABLE threads (ID text primary key, title text, author text, url text, 
 #                 created_utc real, num_comments integer, score integer);"""
 # create_sql2 = """CREATE TABLE comments (ID text primary key, thread_ID text,
@@ -57,7 +57,7 @@ threads_conn = sqlite3.connect('threads.db')
 #     comment_num = 0
 #     for comment in thread.comments:
 #         comment_num += 1
-#         if comment_num > 5:
+#         if comment_num > 10:
 #             break
 #         if comment.author != None:
 #             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
@@ -85,7 +85,7 @@ threads_conn = sqlite3.connect('threads.db')
 #         comment_num = 0
 #         for comment in thread.comments:
 #             comment_num += 1
-#             if comment_num > 5:
+#             if comment_num > 10:
 #                 break
 #             if comment.author != None:
 #                 sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
@@ -108,7 +108,7 @@ threads_conn = sqlite3.connect('threads.db')
 #     comment_num = 0
 #     for comment in thread.comments:
 #         comment_num += 1
-#         if comment_num > 5:
+#         if comment_num > 10:
 #             break
 #         if comment.author != None:
 #             sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
@@ -135,7 +135,7 @@ threads_conn = sqlite3.connect('threads.db')
 #         comment_num = 0
 #         for comment in thread.comments:
 #             comment_num += 1
-#             if comment_num > 5:
+#             if comment_num > 10:
 #                 break
 #             if comment.author != None:
 #                 sql = "INSERT INTO comments VALUES (?, ?, ?, ?, ?, ?);"
@@ -283,7 +283,7 @@ import gensim.models
 # doc2vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(corpus)]
-model = Doc2Vec(documents, vector_size=50, window=2, min_count=1, workers=4)
+model = Doc2Vec(documents, dbow_words=1, vector_size=200, window=5, min_count=1, workers=4)
 
 
 
@@ -369,41 +369,23 @@ for line in corpus:
 # Sentiment analysis function for TextBlob tools
 def text_blob_sentiment(review, sub_entries_textblob):
     analysis = TextBlob(review)
-    if analysis.sentiment.polarity >= 0.0001:
-        if analysis.sentiment.polarity > 0:
-            sub_entries_textblob['positive'] = sub_entries_textblob['positive'] + 1
-            return 'Positive'
-
-    elif analysis.sentiment.polarity <= -0.0001:
-        if analysis.sentiment.polarity <= 0:
-            sub_entries_textblob['negative'] = sub_entries_textblob['negative'] + 1
-            return 'Negative'
+    if analysis.sentiment.polarity > 0:
+        sub_entries_textblob['positive'] = sub_entries_textblob['positive'] + 1
+        return 'Positive'
     else:
-        sub_entries_textblob['neutral'] = sub_entries_textblob['neutral'] + 1
-        return 'Neutral'
+        sub_entries_textblob['negative'] = sub_entries_textblob['negative'] + 1
+        return 'Negative'
 
 sia = SentimentIntensityAnalyzer()
 
 def nltk_sentiment(review, sub_entries_nltk):
     vs = sia.polarity_scores(review)
-    if not vs['neg'] > 0.05:
-        if vs['pos'] - vs['neg'] > 0:
-            sub_entries_nltk['positive'] = sub_entries_nltk['positive'] + 1
-            return 'Positive'
-        else:
-            sub_entries_nltk['neutral'] = sub_entries_nltk['neutral'] + 1
-            return 'Neutral'
-
-    elif not vs['pos'] > 0.05:
-        if vs['pos'] - vs['neg'] <= 0:
-            sub_entries_nltk['negative'] = sub_entries_nltk['negative'] + 1
-            return 'Negative'
-        else:
-            sub_entries_nltk['neutral'] = sub_entries_nltk['neutral'] + 1
-            return 'Neutral'
+    if vs['pos'] - vs['neg'] > 0:
+        sub_entries_nltk['positive'] = sub_entries_nltk['positive'] + 1
+        return 'Positive'
     else:
-        sub_entries_nltk['neutral'] = sub_entries_nltk['neutral'] + 1
-        return 'Neutral'
+        sub_entries_nltk['negative'] = sub_entries_nltk['negative'] + 1
+        return 'Negative'
 
 
 sub_entries_textblob = {'negative': 0, 'positive' : 0, 'neutral' : 0}
@@ -433,6 +415,11 @@ print(f"Models identified {true_sent_count} true sentiments out of {all_entries}
 # split the true sentiment list randomly 20% to training model and 80% to the testing model
 
 # convert sentiment dictionary to two lists
+
+# import random
+# keys = list(true_sent.keys())
+# random.shuffle(keys)
+
 corpus_raw = []
 labels = []
 ts_count = 0
@@ -444,9 +431,9 @@ for key in true_sent:
     else:
         labels.append(0)
     ts_count += 1
-    if ts_count == round(len(true_sent)/4):
+    if ts_count == round(len(true_sent)/5):
         break
-
+print(labels)
 print(f"Training set length: {len(corpus_raw)}")
 
 ## SUPERVISED LEARNING ##
@@ -467,9 +454,9 @@ Y_train = np.asarray(labels)
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 
-
-clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
-# clf = svm.SVC().fit(X_train, Y_train)
+kernel = 'poly'
+# clf = LogisticRegression(random_state=0).fit(X_train, Y_train)
+clf = svm.SVC(kernel=kernel).fit(X_train, Y_train)
 
 
 # Testing set
@@ -486,6 +473,8 @@ for key in true_sent:
         else:
             test_labels.append(0)
 
+
+print(test_labels)
 print(f"Testing set length: {len(test_corpus)}\n")
 
 # test document vectors
@@ -503,11 +492,12 @@ from sklearn.metrics import classification_report
 
 
 Y_pred = clf.predict(X_test)
-
+print(Y_pred)
 
 # confusion matrix, precision, recall, f1
 tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
 
+print(confusion_matrix(Y_test, Y_pred))
 precision = tp/(tp+fp)
 recall = tp/(tp+fn)
 f1 = 2*precision*recall/(precision+recall)
@@ -518,30 +508,128 @@ print("f1: ", f1)
 print(classification_report(Y_test, Y_pred))
 
 
-# Rule-based sentiment analyzers?
-
-vader_Y = []
-
-for doc in test_corpus_raw:
-    sentiment = analyzer.polarity_scores(doc)["compound"]
-    if(sentiment >= 0):
-        vader_Y.append(1)
-    else:
-        vader_Y.append(0)
-print(classification_report(Y_test, vader_Y))
 
 
-blob_Y = []
 
-for doc in test_corpus_raw:
-    sentiment = TextBlob(doc).sentiment.polarity
-    if(sentiment >= 0):
-        blob_Y.append(1)
-    else:
-        blob_Y.append(0)
-print(classification_report(Y_test, blob_Y))
+## DOCUMENT CLUSTERING ##
+from sklearn.cluster import KMeans
+import numpy as np
+
+print("\nDOCUMENT CLUSTERING:")
+
+dv = []
+
+for idx, doc in enumerate(model.dv.vectors):
+    dv.append(doc)
 
 
+# k-means
+kmeans = KMeans(n_clusters=6).fit(dv)
+
+
+# get cluster labels for each of the documents
+cluster_label = kmeans.labels_
+
+
+# count the number of documents belonging to each of the clusters
+label_count = [0] * 6
+for label in cluster_label:
+    label_count[int(label)] += 1
+print(label_count)
+
+# viz
+# PCA dimension reduction
+# 100 dimension vector -> 2 dimensions -> viz-able
+
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+principalComponents = pca.fit_transform(dv)
+pca_1 = principalComponents[:, 0]
+pca_2 = principalComponents[:, 1]
+
+
+# You can also use TSNE to reduce the vector dimensions
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+colors = ['purple', 'blue', 'red', 'orange', 'yellow', 'green']
+fig = plt.figure(figsize=(8,8))
+plt.scatter(pca_1, pca_2, c=cluster_label, cmap=matplotlib.colors.ListedColormap(colors))
+
+
+from sklearn.cluster import AgglomerativeClustering 
+
+# distance_threshold
+# The linkage distance threshold above which, clusters will not be merged. 
+# If not None, n_clusters must be None and compute_full_tree must be True.
+
+
+hc = AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity = 'euclidean', linkage ='average')
+hc.fit(dv)
+
+
+# viz
+# plot dendrogram
+
+from scipy.cluster.hierarchy import dendrogram
+def plot_dendrogram(model, **kwargs):
+    counts = np.zeros(model.children_.shape[0])
+    n_samples = len(model.labels_)
+    for i, merge in enumerate(model.children_):
+        current_count = 0
+        for child_idx in merge:
+            if(child_idx < n_samples):
+                current_count += 1
+            else:
+                current_count += counts[child_idx - n_samples]
+        counts[i] = current_count
+    linkage_matrix = np.column_stack([model.children_, model.distances_, counts]).astype(float)
+    dendrogram(linkage_matrix, **kwargs)
+
+
+
+# The dendrogram can be hard to read
+
+plot_dendrogram(hc, truncate_mode='none')
+
+# Truncation is used to condense the dendrogram.
+# truncate_mode=lastp
+
+# The last p clusters
+# number of data points in cluster (or index of data point if no parenthesis)
+
+plot_dendrogram(hc, truncate_mode='lastp', p=6)
+
+
+# imbalanced clusters
+
+
+# assign the number of clusters in advance
+
+hc = AgglomerativeClustering(n_clusters=6, affinity = 'euclidean', linkage ='average')
+hc.fit(dv)
+
+
+# get cluster labels
+print(hc.labels_)
+
+
+fig = plt.figure(figsize=(8,8))
+plt.scatter(pca_1, pca_2, c=hc.labels_, cmap=matplotlib.colors.ListedColormap(colors))
+
+# it seems not so good
+
+
+# try a different linkage function (a different distance definition)
+
+hc = AgglomerativeClustering(n_clusters=6, affinity = 'euclidean', linkage ='ward')
+hc.fit(dv)
+fig = plt.figure(figsize=(8,8))
+plt.scatter(pca_1, pca_2, c=hc.labels_, cmap=matplotlib.colors.ListedColormap(colors))
+#
+plt.show()
 
 
 

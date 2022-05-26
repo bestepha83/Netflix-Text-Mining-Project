@@ -31,7 +31,7 @@ threads_conn = sqlite3.connect('threads.db')
 #                 created_utc real, num_comments integer, score integer);"""
 # create_sql2 = """CREATE TABLE comments (ID text primary key, thread_ID text,
 #                 body text, author text, created_utc real, score integer,
-#                 foreign key (ID) references threads(ID));"""
+#                 foreign key (thread_ID) references threads(ID));"""
 
 # cur.execute(delete_sql1)
 # cur.execute(delete_sql2)
@@ -153,35 +153,24 @@ threads_conn = sqlite3.connect('threads.db')
 # comments_db = pd.read_sql(query_comments_sql, conn)
 # comments_db.to_csv('comments_table.csv', encoding='utf-8')
 
-
 ## ADD RESULTS TO LISTS ##
 
-review_list = []
-score_lst = []
-
+thread_review_dict = {}
+comment_review_list = []
 
 threads_cur = threads_conn.cursor()
+threads_cur.execute("SELECT ID, title FROM threads_df;")
 
-threads_cur.execute("SELECT title FROM threads_df;")
 for row in threads_cur.fetchall():
-    review_list.append(''.join(row))
-
-threads_cur.execute("SELECT score FROM threads_df;")
-for row in threads_cur.fetchall():
-    row = int(row[0])
-    score_lst.append(row)
-
+    thread_review_dict[row[0]] = row[1]
 
 comments_cur = comments_conn.cursor()
+comments_cur.execute("SELECT thread_ID, body FROM comments_df;")
 
-comments_cur.execute("SELECT body FROM comments_df;")
+count = 0
 for row in comments_cur.fetchall():
-    review_list.append(''.join(row))
-
-comments_cur.execute("SELECT score FROM comments_df;")
-for row in comments_cur.fetchall():
-    row = int(row[0])
-    score_lst.append(row)
+    count += 1
+    comment_review_list.append((row[0].replace('t3_', ''), row[1]))
 
 
 # Expanding contraction
@@ -257,20 +246,27 @@ def preprocess(text):
 
 corpus = []
 
-# # Adding in a specific topic #
-# def topic(review_list):
-#     p1 = re.compile(r"^ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?$\
-#         |^advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?$", re.IGNORECASE)
+# Adding in a specific topic #
+def topic(thread_review_list, comment_review_list):
+    p1 = re.compile(r"^ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]ads?$\
+        |^advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]advertisements?$", re.IGNORECASE)
 
-#     p2 = re.compile(r"^commercials?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]commercials?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]commercials?$", re.IGNORECASE)
+    p2 = re.compile(r"^commercials?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]commercials?[\s\.\?\!\,\-\_]|[\s\.\?\!\,\-\_]commercials?$", re.IGNORECASE)
 
-#     new_review_list = []
-#     for line in review_list:
-#         if(p1.search(line) != None) or (p2.search(line) != None):
-#             new_review_list.append(line)
-#     return new_review_list
+    id_list = []
+    new_review_list = []
 
-# review_list = topic(review_list)
+    for key in thread_review_list:
+        if(p1.search(thread_review_list[key]) != None) or (p2.search(thread_review_list[key]) != None):
+            id_list.append(key)
+            new_review_list.append(thread_review_list[key])
+
+    for line in comment_review_list:
+        if(p1.search(line[1]) != None) or (p2.search(line[1]) != None) or line[0] in id_list:
+            new_review_list.append(line[1])
+    return new_review_list
+
+review_list = topic(thread_review_dict, comment_review_list)
 
 for line in review_list:
     corpus.append(preprocess(line))
@@ -451,7 +447,7 @@ Y_train = np.asarray(labels)
 
 
 # Logistic Regression #
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn import svm
 
 kernel = 'poly'
@@ -619,18 +615,142 @@ print(hc.labels_)
 fig = plt.figure(figsize=(8,8))
 plt.scatter(pca_1, pca_2, c=hc.labels_, cmap=matplotlib.colors.ListedColormap(colors))
 
-# it seems not so good
-
-
 # try a different linkage function (a different distance definition)
 
 hc = AgglomerativeClustering(n_clusters=6, affinity = 'euclidean', linkage ='ward')
 hc.fit(dv)
 fig = plt.figure(figsize=(8,8))
 plt.scatter(pca_1, pca_2, c=hc.labels_, cmap=matplotlib.colors.ListedColormap(colors))
-#
+
 plt.show()
 
 
+
+
+
+
+
+# ## TOPIC MODELING ##
+# from gensim import corpora, models
+
+# dictionary = corpora.Dictionary(corpus)
+# bow_corpus = [dictionary.doc2bow(text) for text in corpus]
+
+
+# lsi = models.LsiModel(bow_corpus, id2word=dictionary, num_topics=20)
+
+
+# # for i in lsi.print_topics(num_topics=20, num_words=20):
+# #     print(i)
+
+
+# # LDA
+
+# lda_model = models.LdaMulticore(bow_corpus, num_topics=20, id2word=dictionary, passes=10, workers=2)
+
+
+# for idx, topic in lda_model.print_topics(-1):
+#     print("Topic: {0} \n Words: {1}".format(idx, topic))
+#     print("\n")
+
+
+# # 6 topics
+# lsi = models.LsiModel(bow_corpus, id2word=dictionary, num_topics=6)
+
+
+# for i in lsi.print_topics(num_topics=6, num_words=20):
+#     print(i)
+
+
+# lda_model = models.LdaMulticore(bow_corpus, num_topics=6, id2word=dictionary, passes=10, workers=2)
+
+
+# for idx, topic in lda_model.print_topics(-1):
+#     print("Topic: {0} \n Words: {1}".format(idx, topic))
+#     print("\n")
+
+
+# # How to determine how many topics?
+# # Coherence measures the how similar the words in the same topic are to each other.
+# # Larger coherence -> better model
+
+
+# from gensim.models.coherencemodel import CoherenceModel
+
+# # three arguments:
+# # model -> the lda model
+# # texts -> tokenized text
+# # dictionary -> dictionary = corpora.Dictionary(corpus) 
+
+# coherence = CoherenceModel(model=lda_model, texts=corpus, dictionary=dictionary, coherence = "c_v")
+# print(coherence.get_coherence())
+
+
+
+# # get_ipython().run_cell_magic('time', '', '# from k = 3~50, line chart\nx = []\ny = []\nfor k in range(3, 51):\n    print(k)\n    lda_model = models.LdaMulticore(bow_corpus, num_topics=k, id2word=dictionary, passes=10, workers=2)\n    coherence = CoherenceModel(model=lda_model, texts=corpus, dictionary=dictionary, coherence = "c_v")\n    x.append(k)\n    y.append(coherence.get_coherence())')
+
+
+
+# import matplotlib.pyplot as plt
+
+
+# plt.plot(x, y)
+# plt.title('Coherence vs Topic')
+# plt.xlabel('# Topics')
+# plt.ylabel('Coherence Score')
+# plt.show()
+
+
+# # In[56]:
+
+
+# plt.plot(x[:20], y[:20])
+# plt.title('Coherence vs Topic')
+# plt.xlabel('# Topics')
+# plt.ylabel('Coherence Score')
+# plt.show()
+
+
+# # In[57]:
+
+
+# # k = 10
+# lda_model = models.LdaMulticore(bow_corpus, num_topics=10, id2word=dictionary, passes=10, workers=2)
+
+
+# # In[58]:
+
+
+# for idx, topic in lda_model.print_topics(-1):
+#     print("Topic: {0} \n Words: {1}".format(idx, topic))
+#     print("\n")
+
+
+# import pyLDAvis
+# import pyLDAvis.gensim_models as gensimvis
+
+
+# # In[63]:
+
+
+# pyLDAvis.enable_notebook()
+
+
+# # In[73]:
+
+
+# print(corpus[0])
+
+
+# # In[80]:
+
+
+# lda_viz = gensimvis.prepare(lda_model, bow_corpus, dictionary)
+
+
+# # In[81]:
+
+
+# lda_viz
 
 
